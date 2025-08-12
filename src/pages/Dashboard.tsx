@@ -40,31 +40,31 @@ export const Dashboard: React.FC = () => {
     })
   }, [lists, searchQuery, showArchived])
 
-  const handleCreateList = () => {
+  const handleCreateList = async () => {
     if (newListTitle.trim()) {
-      const newList = createList(newListTitle.trim())
+      const newList = await createList(newListTitle.trim())
       setNewListTitle('')
       setIsCreating(false)
       window.location.href = `/list/${newList.id}`
     }
   }
 
-  const handleTemplateSelect = (template: { name: string; items: string[] }) => {
-    const newList = createList(template.name)
-    template.items.forEach((item: string) => {
-      addItem(newList.id, item)
-    })
+  const handleTemplateSelect = async (template: { name: string; items: string[] }) => {
+    const newList = await createList(template.name)
+    for (const item of template.items) {
+      await addItem(newList.id, item)
+    }
     window.location.href = `/list/${newList.id}`
   }
 
-  const handleBulkImport = (items: string[]) => {
+  const handleBulkImport = async (items: string[]) => {
     if (!newListTitle.trim()) {
       setNewListTitle('Imported List')
     }
-    const newList = createList(newListTitle.trim() || 'Imported List')
-    items.forEach((item) => {
-      addItem(newList.id, item)
-    })
+    const newList = await createList(newListTitle.trim() || 'Imported List')
+    for (const item of items) {
+      await addItem(newList.id, item)
+    }
     setNewListTitle('')
     setIsCreating(false)
     window.location.href = `/list/${newList.id}`

@@ -86,7 +86,7 @@ export const Login: React.FC = () => {
 
         <div className="text-center">
           <p className="text-xs text-gray-500 dark:text-gray-400">
-            Demo mode - No real authentication required
+            Sign in to sync your lists across devices, or use guest mode to store lists locally on this device only
           </p>
         </div>
       </div>

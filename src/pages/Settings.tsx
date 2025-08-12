@@ -30,6 +30,7 @@ export const Settings: React.FC = () => {
     }
   }
 
+
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8">
@@ -154,6 +155,7 @@ export const Settings: React.FC = () => {
             Data Management
           </h2>
           <div className="space-y-4">
+
             <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4">
               <div className="flex items-start">
                 <svg
@@ -209,6 +211,7 @@ export const Settings: React.FC = () => {
           </div>
         </Card>
       </div>
+
     </div>
   )
 }

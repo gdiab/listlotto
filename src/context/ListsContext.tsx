@@ -1,5 +1,6 @@
 import React, { useEffect, useState, createContext, useContext } from 'react'
 import { useAuth } from './AuthContext'
+import { supabase } from '../lib/supabase'
 
 export interface ListItem {
   id: string
@@ -18,16 +19,17 @@ export interface List {
 
 interface ListsContextType {
   lists: List[]
+  isLoading: boolean
   getList: (id: string) => List | undefined
-  createList: (title: string) => List
-  updateList: (id: string, updates: Partial<Omit<List, 'id'>>) => void
-  deleteList: (id: string) => void
-  addItem: (listId: string, text: string) => void
-  updateItem: (listId: string, itemId: string, text: string) => void
-  removeItem: (listId: string, itemId: string) => void
-  reorderItems: (listId: string, startIndex: number, endIndex: number) => void
-  archiveList: (id: string) => void
-  unarchiveList: (id: string) => void
+  createList: (title: string) => Promise<List>
+  updateList: (id: string, updates: Partial<Omit<List, 'id'>>) => Promise<void>
+  deleteList: (id: string) => Promise<void>
+  addItem: (listId: string, text: string) => Promise<void>
+  updateItem: (listId: string, itemId: string, text: string) => Promise<void>
+  removeItem: (listId: string, itemId: string) => Promise<void>
+  reorderItems: (listId: string, startIndex: number, endIndex: number) => Promise<void>
+  archiveList: (id: string) => Promise<void>
+  unarchiveList: (id: string) => Promise<void>
   getRandomItem: (listId: string) => ListItem | null
 }
 
@@ -38,75 +40,99 @@ export const ListsProvider: React.FC<{
 }> = ({ children }) => {
   const { user, isGuest } = useAuth()
   const [lists, setLists] = useState<List[]>([])
+  const [isLoading, setIsLoading] = useState(false)
 
-  // Load lists from localStorage on mount
+  // Load lists from database or localStorage
   useEffect(() => {
-    const storageKey = user
-      ? `lists_${user.id}`
-      : isGuest
-        ? 'lists_guest'
-        : null
+    const loadLists = async () => {
+      setIsLoading(true)
+      try {
+        if (user && !isGuest) {
+          // Load from Supabase for authenticated users
+          const { data, error } = await supabase
+            .from('lists')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false })
 
-    if (storageKey) {
-      const savedLists = localStorage.getItem(storageKey)
-      if (savedLists) {
-        setLists(JSON.parse(savedLists))
-      } else if (isGuest || user) {
-        // Create sample list for new users
-        const sampleList: List = {
-          id: 'sample-list',
-          title: 'Places to Eat',
-          items: [
-            {
-              id: 'item1',
-              text: 'Pizza Palace',
+          if (error) {
+            console.error('Error loading lists:', error)
+            return
+          }
+
+          if (data) {
+            // Convert Supabase format to our List interface
+            const convertedLists: List[] = data.map((row) => ({
+              id: row.id,
+              title: row.title,
+              items: row.items || [],
+              createdAt: new Date(row.created_at).getTime(),
+              updatedAt: new Date(row.updated_at).getTime(),
+              isArchived: row.is_archived
+            }))
+            setLists(convertedLists)
+          }
+        } else if (isGuest) {
+          // Load from localStorage for guests
+          const savedLists = localStorage.getItem('lists_guest')
+          if (savedLists) {
+            setLists(JSON.parse(savedLists))
+          } else {
+            // Create sample list for new guests
+            const sampleList: List = {
+              id: 'sample-list',
+              title: 'Places to Eat',
+              items: [
+                {
+                  id: 'item1',
+                  text: 'Pizza Palace',
+                  createdAt: Date.now(),
+                },
+                {
+                  id: 'item2',
+                  text: 'Burger Bistro',
+                  createdAt: Date.now(),
+                },
+                {
+                  id: 'item3',
+                  text: 'Taco Temple',
+                  createdAt: Date.now(),
+                },
+                {
+                  id: 'item4',
+                  text: 'Sushi Spot',
+                  createdAt: Date.now(),
+                },
+              ],
               createdAt: Date.now(),
-            },
-            {
-              id: 'item2',
-              text: 'Burger Bistro',
-              createdAt: Date.now(),
-            },
-            {
-              id: 'item3',
-              text: 'Taco Temple',
-              createdAt: Date.now(),
-            },
-            {
-              id: 'item4',
-              text: 'Sushi Spot',
-              createdAt: Date.now(),
-            },
-          ],
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-          isArchived: false,
+              updatedAt: Date.now(),
+              isArchived: false,
+            }
+            setLists([sampleList])
+          }
         }
-        setLists([sampleList])
+      } catch (error) {
+        console.error('Error loading lists:', error)
+      } finally {
+        setIsLoading(false)
       }
     }
+
+    loadLists()
   }, [user, isGuest])
 
-  // Save lists to localStorage whenever they change
+  // Save lists to localStorage for guests
   useEffect(() => {
-    if (!lists.length) return
-
-    const storageKey = user
-      ? `lists_${user.id}`
-      : isGuest
-        ? 'lists_guest'
-        : null
-
-    if (storageKey) {
-      localStorage.setItem(storageKey, JSON.stringify(lists))
+    if (isGuest && lists.length > 0) {
+      localStorage.setItem('lists_guest', JSON.stringify(lists))
     }
-  }, [lists, user, isGuest])
+  }, [lists, isGuest])
 
   const getList = (id: string) => {
     return lists.find((list) => list.id === id)
   }
 
-  const createList = (title: string) => {
+  const createList = async (title: string): Promise<List> => {
     const newList: List = {
       id: `list_${Date.now()}`,
       title,
@@ -115,11 +141,68 @@ export const ListsProvider: React.FC<{
       updatedAt: Date.now(),
       isArchived: false,
     }
-    setLists((prev) => [...prev, newList])
+
+    if (user && !isGuest) {
+      // Save to Supabase for authenticated users
+      const { data, error } = await supabase
+        .from('lists')
+        .insert({
+          user_id: user.id,
+          title,
+          items: [],
+          is_archived: false
+        })
+        .select()
+        .single()
+
+      if (error) {
+        console.error('Error creating list:', error)
+        throw error
+      }
+
+      if (data) {
+        const createdList: List = {
+          id: data.id,
+          title: data.title,
+          items: data.items || [],
+          createdAt: new Date(data.created_at).getTime(),
+          updatedAt: new Date(data.updated_at).getTime(),
+          isArchived: data.is_archived
+        }
+        setLists((prev) => [createdList, ...prev])
+        return createdList
+      }
+    } else {
+      // Local storage for guests
+      setLists((prev) => [newList, ...prev])
+    }
+    
     return newList
   }
 
-  const updateList = (id: string, updates: Partial<Omit<List, 'id'>>) => {
+  const updateList = async (id: string, updates: Partial<Omit<List, 'id'>>) => {
+    if (user && !isGuest) {
+      // Update in Supabase for authenticated users
+      const supabaseUpdates: any = {
+        updated_at: new Date().toISOString()
+      }
+      
+      if (updates.title) supabaseUpdates.title = updates.title
+      if (updates.items !== undefined) supabaseUpdates.items = updates.items
+      if (updates.isArchived !== undefined) supabaseUpdates.is_archived = updates.isArchived
+
+      const { error } = await supabase
+        .from('lists')
+        .update(supabaseUpdates)
+        .eq('id', id)
+
+      if (error) {
+        console.error('Error updating list:', error)
+        throw error
+      }
+    }
+
+    // Update local state
     setLists((prev) =>
       prev.map((list) =>
         list.id === id
@@ -133,24 +216,59 @@ export const ListsProvider: React.FC<{
     )
   }
 
-  const deleteList = (id: string) => {
+  const deleteList = async (id: string) => {
+    if (user && !isGuest) {
+      // Delete from Supabase for authenticated users
+      const { error } = await supabase
+        .from('lists')
+        .delete()
+        .eq('id', id)
+
+      if (error) {
+        console.error('Error deleting list:', error)
+        throw error
+      }
+    }
+
+    // Update local state
     setLists((prev) => prev.filter((list) => list.id !== id))
   }
 
-  const addItem = (listId: string, text: string) => {
+  const addItem = async (listId: string, text: string) => {
+    const targetList = lists.find(list => list.id === listId)
+    if (!targetList) return
+
+    const newItem: ListItem = {
+      id: `item_${Date.now()}`,
+      text,
+      createdAt: Date.now(),
+    }
+
+    const updatedItems = [...targetList.items, newItem]
+
+    if (user && !isGuest) {
+      // Update in Supabase for authenticated users
+      const { error } = await supabase
+        .from('lists')
+        .update({ 
+          items: updatedItems,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', listId)
+
+      if (error) {
+        console.error('Error adding item:', error)
+        throw error
+      }
+    }
+
+    // Update local state
     setLists((prev) =>
       prev.map((list) => {
         if (list.id === listId) {
           return {
             ...list,
-            items: [
-              ...list.items,
-              {
-                id: `item_${Date.now()}`,
-                text,
-                createdAt: Date.now(),
-              },
-            ],
+            items: updatedItems,
             updatedAt: Date.now(),
           }
         }
@@ -159,20 +277,37 @@ export const ListsProvider: React.FC<{
     )
   }
 
-  const updateItem = (listId: string, itemId: string, text: string) => {
+  const updateItem = async (listId: string, itemId: string, text: string) => {
+    const targetList = lists.find(list => list.id === listId)
+    if (!targetList) return
+
+    const updatedItems = targetList.items.map((item) =>
+      item.id === itemId ? { ...item, text } : item
+    )
+
+    if (user && !isGuest) {
+      // Update in Supabase for authenticated users
+      const { error } = await supabase
+        .from('lists')
+        .update({ 
+          items: updatedItems,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', listId)
+
+      if (error) {
+        console.error('Error updating item:', error)
+        throw error
+      }
+    }
+
+    // Update local state
     setLists((prev) =>
       prev.map((list) => {
         if (list.id === listId) {
           return {
             ...list,
-            items: list.items.map((item) =>
-              item.id === itemId
-                ? {
-                    ...item,
-                    text,
-                  }
-                : item,
-            ),
+            items: updatedItems,
             updatedAt: Date.now(),
           }
         }
@@ -181,13 +316,35 @@ export const ListsProvider: React.FC<{
     )
   }
 
-  const removeItem = (listId: string, itemId: string) => {
+  const removeItem = async (listId: string, itemId: string) => {
+    const targetList = lists.find(list => list.id === listId)
+    if (!targetList) return
+
+    const updatedItems = targetList.items.filter((item) => item.id !== itemId)
+
+    if (user && !isGuest) {
+      // Update in Supabase for authenticated users
+      const { error } = await supabase
+        .from('lists')
+        .update({ 
+          items: updatedItems,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', listId)
+
+      if (error) {
+        console.error('Error removing item:', error)
+        throw error
+      }
+    }
+
+    // Update local state
     setLists((prev) =>
       prev.map((list) => {
         if (list.id === listId) {
           return {
             ...list,
-            items: list.items.filter((item) => item.id !== itemId),
+            items: updatedItems,
             updatedAt: Date.now(),
           }
         }
@@ -196,17 +353,38 @@ export const ListsProvider: React.FC<{
     )
   }
 
-  const reorderItems = (
+  const reorderItems = async (
     listId: string,
     startIndex: number,
     endIndex: number,
   ) => {
+    const targetList = lists.find(list => list.id === listId)
+    if (!targetList) return
+
+    const newItems = Array.from(targetList.items)
+    const [removed] = newItems.splice(startIndex, 1)
+    newItems.splice(endIndex, 0, removed)
+
+    if (user && !isGuest) {
+      // Update in Supabase for authenticated users
+      const { error } = await supabase
+        .from('lists')
+        .update({ 
+          items: newItems,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', listId)
+
+      if (error) {
+        console.error('Error reordering items:', error)
+        throw error
+      }
+    }
+
+    // Update local state
     setLists((prev) =>
       prev.map((list) => {
         if (list.id === listId) {
-          const newItems = Array.from(list.items)
-          const [removed] = newItems.splice(startIndex, 1)
-          newItems.splice(endIndex, 0, removed)
           return {
             ...list,
             items: newItems,
@@ -218,14 +396,14 @@ export const ListsProvider: React.FC<{
     )
   }
 
-  const archiveList = (id: string) => {
-    updateList(id, {
+  const archiveList = async (id: string) => {
+    await updateList(id, {
       isArchived: true,
     })
   }
 
-  const unarchiveList = (id: string) => {
-    updateList(id, {
+  const unarchiveList = async (id: string) => {
+    await updateList(id, {
       isArchived: false,
     })
   }
@@ -241,6 +419,7 @@ export const ListsProvider: React.FC<{
     <ListsContext.Provider
       value={{
         lists,
+        isLoading,
         getList,
         createList,
         updateList,

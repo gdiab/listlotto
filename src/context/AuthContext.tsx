@@ -1,4 +1,5 @@
 import React, { useEffect, useState, createContext, useContext } from 'react'
+import { supabase } from '../lib/supabase'
 
 export interface User {
   id: string
@@ -27,42 +28,79 @@ export const AuthProvider: React.FC<{
 
   useEffect(() => {
     // Check if user is logged in
-    const checkAuth = () => {
-      const savedUser = localStorage.getItem('user')
-      const guestMode = localStorage.getItem('guestMode')
-      
-      if (savedUser) {
-        setUser(JSON.parse(savedUser))
+    const checkAuth = async () => {
+      try {
+        // Check for existing Supabase session
+        const { data: { session } } = await supabase.auth.getSession()
+        
+        if (session?.user) {
+          const supabaseUser = session.user
+          setUser({
+            id: supabaseUser.id,
+            name: supabaseUser.user_metadata?.name || supabaseUser.email?.split('@')[0] || 'User',
+            email: supabaseUser.email || '',
+            photoUrl: supabaseUser.user_metadata?.avatar_url
+          })
+        } else {
+          // Check for guest mode
+          const guestMode = localStorage.getItem('guestMode')
+          if (guestMode === 'true') {
+            setIsGuest(true)
+          }
+        }
+      } catch (error) {
+        console.error('Error checking auth:', error)
+      } finally {
+        setIsLoading(false)
       }
-      if (guestMode === 'true') {
-        setIsGuest(true)
-      }
-      setIsLoading(false)
     }
     
     checkAuth()
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        setIsLoading(true)
+        
+        if (session?.user) {
+          const supabaseUser = session.user
+          setUser({
+            id: supabaseUser.id,
+            name: supabaseUser.user_metadata?.name || supabaseUser.email?.split('@')[0] || 'User',
+            email: supabaseUser.email || '',
+            photoUrl: supabaseUser.user_metadata?.avatar_url
+          })
+          setIsGuest(false)
+          localStorage.removeItem('guestMode')
+        } else {
+          setUser(null)
+        }
+        
+        setIsLoading(false)
+      }
+    )
+
+    return () => subscription.unsubscribe()
   }, [])
 
   const login = async () => {
-    // For MVP, simulate Google login
     setIsLoading(true)
     try {
-      // Mock user data
-      const mockUser: User = {
-        id: 'user123',
-        name: 'Demo User',
-        email: 'demo@example.com',
-        photoUrl:
-          'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=crop&w=250&q=80',
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}`
+        }
+      })
+      
+      if (error) {
+        console.error('Login failed:', error.message)
+        throw error
       }
       
-      setUser(mockUser)
-      setIsGuest(false)
-      localStorage.setItem('user', JSON.stringify(mockUser))
-      localStorage.removeItem('guestMode')
+      // The auth state change will be handled by the onAuthStateChange listener
     } catch (error) {
       console.error('Login failed', error)
-    } finally {
       setIsLoading(false)
     }
   }
@@ -70,9 +108,16 @@ export const AuthProvider: React.FC<{
   const logout = async () => {
     setIsLoading(true)
     try {
+      const { error } = await supabase.auth.signOut()
+      
+      if (error) {
+        console.error('Logout failed:', error.message)
+        throw error
+      }
+      
+      // Clear guest mode and user state
       setUser(null)
       setIsGuest(false)
-      localStorage.removeItem('user')
       localStorage.removeItem('guestMode')
     } catch (error) {
       console.error('Logout failed', error)

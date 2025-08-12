@@ -104,7 +104,7 @@ const AnimationEngine: React.FC<AnimationEngineProps> = ({
       }
 
       animationRef.current.shuffleCount++
-      animationRef.current.timeoutId = setTimeout(performShuffle, currentDuration)
+      animationRef.current.timeoutId = setTimeout(performShuffle, currentDuration) as any
     }
 
     performShuffle()
