@@ -44,7 +44,7 @@ const RandomizerView = () => {
             {list.items.length} items ready for random selection
           </p>
           <div className="mt-2 text-sm text-gray-500 dark:text-gray-500">
-            Experience the theatrical selection process below! 🎭
+            Need to make a choice? We can choose a winner for you! 🎉
           </div>
         </div>
 
