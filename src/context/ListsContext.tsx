@@ -143,6 +143,15 @@ export const ListsProvider: React.FC<{
     }
 
     if (user && !isGuest) {
+      // Debug authentication state
+      console.log('Creating list for user:', user)
+      console.log('User ID:', user.id)
+      
+      // Check current auth session
+      const { data: { session } } = await supabase.auth.getSession()
+      console.log('Current session user ID:', session?.user?.id)
+      console.log('Session matches user:', session?.user?.id === user.id)
+
       // Save to Supabase for authenticated users
       const { data, error } = await supabase
         .from('lists')
@@ -157,6 +166,12 @@ export const ListsProvider: React.FC<{
 
       if (error) {
         console.error('Error creating list:', error)
+        console.error('Error details:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        })
         throw error
       }
 
