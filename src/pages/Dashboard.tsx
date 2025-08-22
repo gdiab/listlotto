@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useLists } from '../context/ListsContext'
 import { useAuth } from '../context/AuthContext'
 import ListCard from '../components/lists/ListCard'
@@ -15,6 +16,7 @@ import {
 } from 'lucide-react'
 
 export const Dashboard: React.FC = () => {
+  const navigate = useNavigate()
   const { lists, createList, deleteList, archiveList, unarchiveList, addItem } =
     useLists()
   const { user, isGuest } = useAuth()
@@ -45,7 +47,7 @@ export const Dashboard: React.FC = () => {
       const newList = await createList(newListTitle.trim())
       setNewListTitle('')
       setIsCreating(false)
-      window.location.href = `/list/${newList.id}`
+      navigate(`/list/${newList.id}`)
     }
   }
 
@@ -54,7 +56,7 @@ export const Dashboard: React.FC = () => {
     for (const item of template.items) {
       await addItem(newList.id, item)
     }
-    window.location.href = `/list/${newList.id}`
+    navigate(`/list/${newList.id}`)
   }
 
   const handleBulkImport = async (items: string[]) => {
@@ -67,7 +69,7 @@ export const Dashboard: React.FC = () => {
     }
     setNewListTitle('')
     setIsCreating(false)
-    window.location.href = `/list/${newList.id}`
+    navigate(`/list/${newList.id}`)
   }
 
   return (
