@@ -150,9 +150,7 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({
             <p className="text-lg text-gray-700 dark:text-gray-300 font-medium">
               🎊 There's your answer! 🎊
             </p>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-              Selected from {selectedItem.text} options
-            </p>
+            
           </motion.div>
         </motion.div>
 
