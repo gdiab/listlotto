@@ -143,14 +143,25 @@ export const ListsProvider: React.FC<{
     }
 
     if (user && !isGuest) {
-      // Debug authentication state
-      console.log('Creating list for user:', user)
-      console.log('User ID:', user.id)
-      
-      // Check current auth session
-      const { data: { session } } = await supabase.auth.getSession()
-      console.log('Current session user ID:', session?.user?.id)
-      console.log('Session matches user:', session?.user?.id === user.id)
+      // Ensure user exists in public.users table (fallback for trigger failures)
+      try {
+        const { error: upsertError } = await supabase
+          .from('users')
+          .upsert({
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            avatar_url: user.photoUrl
+          }, {
+            onConflict: 'id'
+          })
+
+        if (upsertError) {
+          console.error('Error ensuring user exists:', upsertError)
+        }
+      } catch (userError) {
+        console.error('Failed to ensure user exists:', userError)
+      }
 
       // Save to Supabase for authenticated users
       const { data, error } = await supabase
@@ -166,12 +177,6 @@ export const ListsProvider: React.FC<{
 
       if (error) {
         console.error('Error creating list:', error)
-        console.error('Error details:', {
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          code: error.code
-        })
         throw error
       }
 
