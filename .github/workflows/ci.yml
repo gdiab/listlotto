@@ -1,0 +1,80 @@
+# CI/CD Pipeline - Currently Disabled
+#
+# This workflow is commented out because it would currently fail due to:
+# - ESLint errors that need fixing (2 `any` types, 1 React Fast Refresh warning)
+# - No test suite implemented yet
+# 
+# TODO: Enable this workflow after completing prerequisites in docs/TODO.md:
+# 1. Fix ESLint warnings
+# 2. Set up Jest and React Testing Library  
+# 3. Write initial test suite
+#
+# Once ready, uncomment and customize this workflow for comprehensive CI/CD
+
+# name: CI
+# 
+# on:
+#   push:
+#     branches: [main]
+#   pull_request:
+#     branches: [main]
+# 
+# jobs:
+#   test:
+#     runs-on: ubuntu-latest
+# 
+#     strategy:
+#       matrix:
+#         node-version: [18.x, 20.x]
+# 
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v4
+# 
+#       - name: Setup Node.js ${{ matrix.node-version }}
+#         uses: actions/setup-node@v4
+#         with:
+#           node-version: ${{ matrix.node-version }}
+#           cache: 'npm'
+# 
+#       - name: Install dependencies
+#         run: npm ci
+# 
+#       - name: Type checking
+#         run: npm run typecheck
+# 
+#       - name: Lint code
+#         run: npm run lint
+# 
+#       - name: Build project
+#         run: npm run build
+# 
+#       - name: Run tests
+#         run: npm test
+# 
+#   build-preview:
+#     runs-on: ubuntu-latest
+#     if: github.event_name == 'pull_request'
+#     
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v4
+# 
+#       - name: Setup Node.js
+#         uses: actions/setup-node@v4
+#         with:
+#           node-version: '20.x'
+#           cache: 'npm'
+# 
+#       - name: Install dependencies
+#         run: npm ci
+# 
+#       - name: Build for production
+#         run: npm run build
+# 
+#       - name: Upload build artifacts
+#         uses: actions/upload-artifact@v4
+#         with:
+#           name: build-files
+#           path: dist/
+#           retention-days: 7

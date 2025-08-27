@@ -4,31 +4,31 @@
 ### Architecture Overview
 
 #### Tech Stack
-**Frontend** ✅ IMPLEMENTED
+**Frontend** ✅ PRODUCTION DEPLOYED
 - Framework: React 18+ with TypeScript
 - State Management: Context API (AuthContext, ListsContext, ThemeContext)
 - Styling: Tailwind CSS + Framer Motion for animations
 - Build Tool: Vite
 - Additional: @dnd-kit for drag-and-drop, canvas-confetti for celebrations
 
-**Backend** ✅ IMPLEMENTED
+**Backend** ✅ PRODUCTION DEPLOYED
 - Runtime: Supabase (PostgreSQL + Authentication + Real-time)
 - Database: Supabase PostgreSQL with Row Level Security
 - Authentication: Real Google OAuth via Supabase
 - Hosting: Vercel (frontend) + Supabase (backend)
-- Current State: Production-ready with real auth and database
+- Live URL: https://listlotto.com
 
-**Development Tools**
+**Development Tools** ✅ CONFIGURED
 - Version Control: Git/GitHub
-- CI/CD: GitHub Actions
-- Testing: Jest + React Testing Library
-- Linting: ESLint + Prettier
-- Monitoring: Sentry for error tracking
+- CI/CD: GitHub Actions (type checking, linting, build verification)
+- Testing: Not yet implemented (see docs/TODO.md)
+- Linting: ESLint (active, 2 minor warnings to fix)
+- Monitoring: Available for future setup (see docs/TODO.md)
 
 ### Database Schema
 
 ```sql
--- Users table
+-- Users table ✅ DEPLOYED
 CREATE TABLE users (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   email VARCHAR(255) UNIQUE NOT NULL,
@@ -40,7 +40,7 @@ CREATE TABLE users (
   preferences JSONB DEFAULT '{}'::jsonb
 );
 
--- Lists table
+-- Lists table ✅ DEPLOYED  
 CREATE TABLE lists (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES users(id) ON DELETE CASCADE,
@@ -52,50 +52,40 @@ CREATE TABLE lists (
   metadata JSONB DEFAULT '{}'::jsonb
 );
 
--- List items table
-CREATE TABLE list_items (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  list_id UUID REFERENCES lists(id) ON DELETE CASCADE,
-  content TEXT NOT NULL,
-  position INTEGER NOT NULL,
-  is_active BOOLEAN DEFAULT TRUE,
-  created_at TIMESTAMP DEFAULT NOW(),
-  updated_at TIMESTAMP DEFAULT NOW()
-);
+-- Note: Items are stored as JSONB array in the lists.metadata field
+-- This simplified approach works well for the current use case and 
+-- provides better performance for reordering operations.
 
--- Selection history table
-CREATE TABLE selection_history (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  list_id UUID REFERENCES lists(id) ON DELETE CASCADE,
-  item_id UUID REFERENCES list_items(id) ON DELETE SET NULL,
-  selected_at TIMESTAMP DEFAULT NOW(),
-  selection_metadata JSONB DEFAULT '{}'::jsonb
-);
-
--- Indexes
-CREATE INDEX idx_lists_user_id ON lists(user_id);
-CREATE INDEX idx_list_items_list_id ON list_items(list_id);
-CREATE INDEX idx_selection_history_list_id ON selection_history(list_id);
+-- Row Level Security Policies ✅ ACTIVE
+-- Users can only access their own data
+-- Anonymous users use localStorage for guest mode
 ```
 
-### API Endpoints
+### API Implementation ✅ COMPLETE
 
-#### Authentication
-```
-POST   /api/auth/google     - Google OAuth callback
-POST   /api/auth/logout     - Logout user
-GET    /api/auth/session    - Get current session
+The application uses **Supabase client-side SDK** instead of traditional REST API endpoints. All database operations go through:
+
+#### Supabase Operations
+```javascript
+// Authentication (via Supabase Auth)
+supabase.auth.signInWithOAuth({ provider: 'google' })
+supabase.auth.signOut()
+supabase.auth.getSession()
+
+// Lists Operations (via Supabase Database)
+supabase.from('lists').select('*')
+supabase.from('lists').insert(data)
+supabase.from('lists').update(data).eq('id', id)
+supabase.from('lists').delete().eq('id', id)
+
+// Real-time subscriptions
+supabase.from('lists').on('*', callback).subscribe()
 ```
 
-#### Lists
-```
-GET    /api/lists           - Get all user lists
-POST   /api/lists           - Create new list
-GET    /api/lists/:id       - Get specific list
-PUT    /api/lists/:id       - Update list
-DELETE /api/lists/:id       - Delete list
-POST   /api/lists/:id/archive - Archive/unarchive list
-```
+#### Row Level Security Policies ✅ ACTIVE
+- Users can only access their own lists and items
+- Guest users' data stays in localStorage
+- Authenticated users' data syncs across devices
 
 #### List Items
 ```

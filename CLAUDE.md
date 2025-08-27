@@ -4,17 +4,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-ListLotto is a React-based list randomizer web application that allows users to create, manage, and randomly select items from lists with engaging animations. The project is currently in documentation/planning phase with comprehensive specs but no actual implementation yet.
+ListLotto is a React-based list randomizer web application that allows users to create, manage, and randomly select items from lists with engaging animations. The project is **production-ready and deployed** at [listlotto.com](https://listlotto.com) with full authentication, database integration, and all core features implemented.
 
 ## Architecture
 
-### Tech Stack (Planned)
+### Tech Stack (Production)
 - **Frontend**: React 18+ with TypeScript, Tailwind CSS, Framer Motion
 - **State Management**: Context API (AuthContext, ListsContext, ThemeContext)  
 - **Build Tool**: Vite
 - **Styling**: Tailwind CSS with dark/light theme support
-- **Authentication**: Mock Google OAuth (in design files)
-- **Database**: Local storage (MVP), PostgreSQL with Prisma (future)
+- **Authentication**: Real Google OAuth via Supabase
+- **Database**: Supabase PostgreSQL with Row Level Security
+- **Deployment**: Vercel (frontend) + Supabase (backend)
+- **Drag & Drop**: @dnd-kit for accessible item reordering
 
 ### Project Structure
 ```
@@ -60,26 +62,26 @@ interface ListItem {
 
 ## Development Commands
 
-⚠️ **No build system is currently set up.** Based on the tech spec, the intended commands would be:
+✅ **All commands are working and verified:**
 
 ```bash
 # Install dependencies
-npm ci
+npm install
 
 # Development server  
-npm run dev
+npm run dev        # Starts dev server on localhost:5173
 
 # Build for production
-npm run build
-
-# Run tests
-npm test
+npm run build      # TypeScript compilation + Vite build
 
 # Linting
-npm run lint
+npm run lint       # ESLint validation (has 2 minor warnings to fix)
 
 # Type checking
-npm run typecheck
+npm run typecheck  # ✅ Passes - no TypeScript errors
+
+# Preview production build
+npm run preview    # Preview the built app locally
 ```
 
 ## Key Features
@@ -127,9 +129,9 @@ npm run typecheck
 - Interface definitions in shared types file
 - Proper prop typing for all components
 
-## Current State - Production Ready ✅ 
+## Current State - Production Deployed ✅ 
 
-**ListLotto**: Complete, production-ready list randomizer application with real authentication and database integration.
+**ListLotto**: Complete production application deployed at [listlotto.com](https://listlotto.com) with real authentication, database integration, and all core features working.
 
 ### Application Features ✅
 - **Authentication**: Real Google OAuth + Guest mode fallback
@@ -151,43 +153,34 @@ npm run typecheck
 - **State**: Context API (Auth, Lists, Theme)
 - **Authentication**: Google OAuth via Supabase
 - **Database**: Supabase PostgreSQL with Row Level Security
+- **Deployment**: Vercel with production environment
 
-## Next Session Goals - Production Deployment 🚀
+## Next Session Goals - Maintenance & Enhancements 🔧
 
-The application is fully functional with real authentication and database integration. The only remaining tasks are production deployment:
+The application is production-ready and deployed. Future work focuses on maintenance and feature enhancements:
 
-### Priority 1: Production Supabase Project
-1. Create production Supabase project (`listlotto-prod`)
-2. Run `database/schema.sql` in production SQL Editor
-3. Configure Google OAuth with production domain URLs
-4. Copy production URL and anon key for deployment
+### Priority 1: Code Quality
+- Clean up unused dependencies (react-beautiful-dnd)
+- Fix minor ESLint warnings (2 `any` types, 1 fast refresh warning)
+- Set up comprehensive testing with Jest and React Testing Library
 
-### Priority 2: Vercel Deployment
-1. Connect GitHub repository to Vercel
-2. Configure environment variables in Vercel dashboard:
-   ```
-   VITE_SUPABASE_URL=https://prod-project-id.supabase.co
-   VITE_SUPABASE_ANON_KEY=prod-anon-key
-   VITE_GOOGLE_CLIENT_ID=prod-google-client-id.apps.googleusercontent.com
-   ```
-3. Deploy and test production authentication flow
-4. Verify cross-device sync works in production
+### Priority 2: CI/CD Pipeline
+- Add GitHub Actions for automated testing and linting
+- Implement deployment previews for pull requests
+- Set up monitoring and error tracking
 
-### Priority 3: Production Testing
-- [ ] Google OAuth works with production domain
-- [ ] Database operations function correctly  
-- [ ] Cross-device sync works in production
-- [ ] Guest mode still functions as fallback
-- [ ] Performance is acceptable on production
+### Priority 3: Feature Enhancements
+- Additional randomization themes and animations  
+- List sharing and collaboration features
+- Data export/import functionality
+- Performance optimizations and bundle size reduction
 
-**That's it!** The application is feature-complete and ready for production use.
-
-### Verification Commands (Still Working)
+### Verification Commands ✅
 ```bash
 npm run dev        # Start dev server on localhost:5173
 npm run typecheck  # ✅ Passes - no TypeScript errors  
-npm run lint       # ✅ Passes - only minor React Fast Refresh warnings
-npm run build      # ✅ Passes - production build (357KB)
+npm run lint       # ⚠️  Has 2 minor warnings to fix
+npm run build      # ✅ Passes - production build ready
 ```
 
-**Ready for Phase 5a**: CRITICAL production readiness tasks. The UI/UX is complete and fully functional, but requires real authentication and database integration before production deployment.
+**Status**: Production application with room for continuous improvement and feature additions.
