@@ -22,6 +22,7 @@ const ListCard: React.FC<ListCardProps> = ({
   onDelete,
 }) => {
   const formattedDate = new Date(list.updatedAt).toLocaleDateString()
+  const editPath = `/list/${list.id}`
 
   return (
     <div
@@ -32,7 +33,13 @@ const ListCard: React.FC<ListCardProps> = ({
       <div className="p-5">
         <div className="flex justify-between items-start">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 truncate">
-            {list.title}
+            <Link
+              to={editPath}
+              aria-label={`Edit ${list.title}`}
+              className="hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-800 rounded-sm"
+            >
+              {list.title}
+            </Link>
           </h3>
           <div className="flex space-x-2">
             {list.isArchived ? (
@@ -66,20 +73,26 @@ const ListCard: React.FC<ListCardProps> = ({
           Updated: {formattedDate} • {list.items.length} items
         </p>
 
-        <div className="max-h-24 overflow-hidden mb-4">
-          <ul className="text-sm text-gray-600 dark:text-gray-300">
-            {list.items.slice(0, 3).map((item) => (
-              <li key={item.id} className="truncate">
-                {item.text}
-              </li>
-            ))}
-            {list.items.length > 3 && (
-              <li className="text-gray-400 dark:text-gray-500">
-                +{list.items.length - 3} more...
-              </li>
-            )}
-          </ul>
-        </div>
+        <Link
+          to={editPath}
+          aria-label={`Edit ${list.title}`}
+          className="block mb-4 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-800 cursor-pointer"
+        >
+          <div className="max-h-24 overflow-hidden">
+            <ul className="text-sm text-gray-600 dark:text-gray-300">
+              {list.items.slice(0, 3).map((item) => (
+                <li key={item.id} className="truncate">
+                  {item.text}
+                </li>
+              ))}
+              {list.items.length > 3 && (
+                <li className="text-gray-400 dark:text-gray-500">
+                  +{list.items.length - 3} more...
+                </li>
+              )}
+            </ul>
+          </div>
+        </Link>
 
         <div className="flex justify-between pt-2 border-t border-gray-100 dark:border-gray-700">
           <Link
