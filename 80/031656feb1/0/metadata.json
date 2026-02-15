@@ -1,0 +1,31 @@
+{
+  "cli_version": "0.4.4",
+  "checkpoint_id": "80031656feb1",
+  "session_id": "f8b63b82-0e7f-4f47-b48b-5c17859c77e6",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-15T01:05:57.67098Z",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "src/components/randomizer/AnimationEngine.tsx"
+  ],
+  "agent": "Claude Code",
+  "transcript_identifier_at_start": "c664500d-8705-411e-842f-e6371d54506c",
+  "token_usage": {
+    "input_tokens": 84,
+    "cache_creation_tokens": 34020,
+    "cache_read_tokens": 388388,
+    "output_tokens": 16,
+    "api_call_count": 10
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-15T01:05:57.626831Z",
+    "agent_lines": 1,
+    "human_added": 101,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 102,
+    "agent_percentage": 0.9803921568627451
+  },
+  "transcript_path": ".claude/projects/-Users-gd-github-listlotto/f8b63b82-0e7f-4f47-b48b-5c17859c77e6.jsonl"
+}
