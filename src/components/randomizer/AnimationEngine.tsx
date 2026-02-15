@@ -180,7 +180,7 @@ const AnimationEngine: React.FC<AnimationEngineProps> = ({
 
       {/* Control button */}
       <motion.button
-        onClick={selectedItem ? resetAnimation : startAnimation}
+        onClick={startAnimation}
         disabled={disabled || items.length === 0}
         className={`px-8 py-4 rounded-xl text-white font-semibold text-lg shadow-lg focus:outline-none focus:ring-4 focus:ring-offset-2 focus:ring-indigo-300 dark:focus:ring-offset-gray-800 transition-all duration-200 ${
           disabled || items.length === 0
