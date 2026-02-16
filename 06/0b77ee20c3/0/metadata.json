@@ -1,0 +1,40 @@
+{
+  "cli_version": "0.4.4",
+  "checkpoint_id": "060b77ee20c3",
+  "session_id": "f8b63b82-0e7f-4f47-b48b-5c17859c77e6",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-16T05:57:53.997306Z",
+  "branch": "feat/weighted-randomization",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "database/migrations/001_add_use_weights.sql",
+    "src/components/lists/ItemsList.tsx",
+    "src/components/randomizer/AnimationEngine.tsx",
+    "src/components/randomizer/SpinnerAnimation.tsx",
+    "src/context/ListsContext.tsx",
+    "src/pages/ListDetail.tsx",
+    "src/pages/RandomizerView.tsx",
+    "src/types/index.ts"
+  ],
+  "agent": "Claude Code",
+  "transcript_identifier_at_start": "f50decbb-6f71-48d3-b2d8-a19f0e880dea",
+  "checkpoint_transcript_start": 49,
+  "transcript_lines_at_start": 49,
+  "token_usage": {
+    "input_tokens": 1040,
+    "cache_creation_tokens": 313406,
+    "cache_read_tokens": 6701530,
+    "output_tokens": 205,
+    "api_call_count": 83
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-16T05:57:53.598955Z",
+    "agent_lines": 357,
+    "human_added": 101,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 458,
+    "agent_percentage": 77.9475982532751
+  },
+  "transcript_path": ".claude/projects/-Users-gd-github-listlotto/f8b63b82-0e7f-4f47-b48b-5c17859c77e6.jsonl"
+}
