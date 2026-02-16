@@ -52,6 +52,7 @@ const RandomizerView = () => {
           <AnimationEngine
             items={list.items}
             onSelectionComplete={handleSelectionComplete}
+            useWeights={list.useWeights}
           />
         </div>
 

@@ -11,6 +11,7 @@ export interface ListItem {
   id: string
   text: string
   createdAt: number
+  weight?: number // Default is 1 when undefined
 }
 
 // List types
@@ -21,6 +22,7 @@ export interface List {
   createdAt: number
   updatedAt: number
   isArchived: boolean
+  useWeights?: boolean // When true, item weights affect randomization
 }
 
 // Context types
@@ -51,6 +53,10 @@ export interface ListsContextType {
   archiveList: (id: string) => void
   unarchiveList: (id: string) => void
   getRandomItem: (listId: string) => ListItem | null
+  // Weight management
+  updateItemWeight: (listId: string, itemId: string, weight: number) => void
+  toggleUseWeights: (listId: string) => void
+  resetWeights: (listId: string) => void
 }
 
 // Component prop types

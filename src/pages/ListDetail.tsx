@@ -22,6 +22,8 @@ import {
 import {
   ChevronLeftIcon,
   ShuffleIcon,
+  ScaleIcon,
+  RotateCcwIcon,
 } from 'lucide-react'
 import ItemsList from '../components/lists/ItemsList'
 import AddItemForm from '../components/lists/AddItemForm'
@@ -29,8 +31,17 @@ import AddItemForm from '../components/lists/AddItemForm'
 const ListDetail = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { getList, updateList, addItem, updateItem, removeItem, reorderItems } =
-    useLists()
+  const {
+    getList,
+    updateList,
+    addItem,
+    updateItem,
+    removeItem,
+    reorderItems,
+    updateItemWeight,
+    toggleUseWeights,
+    resetWeights,
+  } = useLists()
   
   const list = getList(id || '')
   const [title, setTitle] = useState('')
@@ -129,6 +140,53 @@ const ListDetail = () => {
           />
         </div>
 
+        {/* Weights Toggle */}
+        <div className="mb-6 flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+          <div className="flex items-center space-x-3">
+            <ScaleIcon size={20} className="text-gray-500 dark:text-gray-400" />
+            <div>
+              <label
+                htmlFor="useWeights"
+                className="text-sm font-medium text-gray-900 dark:text-white cursor-pointer"
+              >
+                Use Weights
+              </label>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Adjust probability for each item
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center space-x-3">
+            {list.useWeights && (
+              <button
+                onClick={() => resetWeights(list.id)}
+                className="inline-flex items-center px-2 py-1 text-xs font-medium text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400"
+                title="Reset all weights to equal"
+              >
+                <RotateCcwIcon size={14} className="mr-1" />
+                Reset
+              </button>
+            )}
+            <button
+              id="useWeights"
+              role="switch"
+              aria-checked={list.useWeights ?? false}
+              onClick={() => toggleUseWeights(list.id)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 ${
+                list.useWeights
+                  ? 'bg-indigo-600'
+                  : 'bg-gray-300 dark:bg-gray-600'
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  list.useWeights ? 'translate-x-6' : 'translate-x-1'
+                }`}
+              />
+            </button>
+          </div>
+        </div>
+
         {list.items.length > 0 && (
           <div className="mb-8">
             <div className="flex justify-between items-center mb-4">
@@ -165,6 +223,10 @@ const ListDetail = () => {
                   onCancelEdit={handleCancelEdit}
                   onRemoveItem={(itemId) => removeItem(list.id, itemId)}
                   onEditingTextChange={setEditingItemText}
+                  showWeights={list.useWeights}
+                  onWeightChange={(itemId, weight) =>
+                    updateItemWeight(list.id, itemId, weight)
+                  }
                 />
               </SortableContext>
             </DndContext>

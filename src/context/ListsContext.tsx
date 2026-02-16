@@ -6,6 +6,7 @@ export interface ListItem {
   id: string
   text: string
   createdAt: number
+  weight?: number // Default is 1 when undefined
 }
 
 export interface List {
@@ -15,6 +16,7 @@ export interface List {
   createdAt: number
   updatedAt: number
   isArchived: boolean
+  useWeights?: boolean // When true, item weights affect randomization
 }
 
 interface ListsContextType {
@@ -31,6 +33,10 @@ interface ListsContextType {
   archiveList: (id: string) => Promise<void>
   unarchiveList: (id: string) => Promise<void>
   getRandomItem: (listId: string) => ListItem | null
+  // Weight management
+  updateItemWeight: (listId: string, itemId: string, weight: number) => Promise<void>
+  toggleUseWeights: (listId: string) => Promise<void>
+  resetWeights: (listId: string) => Promise<void>
 }
 
 const ListsContext = createContext<ListsContextType | undefined>(undefined)
@@ -68,7 +74,8 @@ export const ListsProvider: React.FC<{
               items: row.items || [],
               createdAt: new Date(row.created_at).getTime(),
               updatedAt: new Date(row.updated_at).getTime(),
-              isArchived: row.is_archived
+              isArchived: row.is_archived,
+              useWeights: row.use_weights ?? false
             }))
             setLists(convertedLists)
           }
@@ -140,6 +147,7 @@ export const ListsProvider: React.FC<{
       createdAt: Date.now(),
       updatedAt: Date.now(),
       isArchived: false,
+      useWeights: false,
     }
 
     if (user && !isGuest) {
@@ -170,7 +178,8 @@ export const ListsProvider: React.FC<{
           user_id: user.id,
           title,
           items: [],
-          is_archived: false
+          is_archived: false,
+          use_weights: false
         })
         .select()
         .single()
@@ -187,7 +196,8 @@ export const ListsProvider: React.FC<{
           items: data.items || [],
           createdAt: new Date(data.created_at).getTime(),
           updatedAt: new Date(data.updated_at).getTime(),
-          isArchived: data.is_archived
+          isArchived: data.is_archived,
+          useWeights: data.use_weights ?? false
         }
         setLists((prev) => [createdList, ...prev])
         return createdList
@@ -203,13 +213,14 @@ export const ListsProvider: React.FC<{
   const updateList = async (id: string, updates: Partial<Omit<List, 'id'>>) => {
     if (user && !isGuest) {
       // Update in Supabase for authenticated users
-      const supabaseUpdates: any = {
+      const supabaseUpdates: Record<string, unknown> = {
         updated_at: new Date().toISOString()
       }
-      
+
       if (updates.title) supabaseUpdates.title = updates.title
       if (updates.items !== undefined) supabaseUpdates.items = updates.items
       if (updates.isArchived !== undefined) supabaseUpdates.is_archived = updates.isArchived
+      if (updates.useWeights !== undefined) supabaseUpdates.use_weights = updates.useWeights
 
       const { error } = await supabase
         .from('lists')
@@ -428,9 +439,131 @@ export const ListsProvider: React.FC<{
     })
   }
 
+  const updateItemWeight = async (listId: string, itemId: string, weight: number) => {
+    const targetList = lists.find(list => list.id === listId)
+    if (!targetList) return
+
+    // Ensure weight is at least 1
+    const safeWeight = Math.max(1, Math.round(weight))
+
+    const updatedItems = targetList.items.map((item) =>
+      item.id === itemId ? { ...item, weight: safeWeight } : item
+    )
+
+    if (user && !isGuest) {
+      const { error } = await supabase
+        .from('lists')
+        .update({
+          items: updatedItems,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', listId)
+
+      if (error) {
+        console.error('Error updating item weight:', error)
+        throw error
+      }
+    }
+
+    setLists((prev) =>
+      prev.map((list) =>
+        list.id === listId
+          ? { ...list, items: updatedItems, updatedAt: Date.now() }
+          : list
+      )
+    )
+  }
+
+  const toggleUseWeights = async (listId: string) => {
+    const targetList = lists.find(list => list.id === listId)
+    if (!targetList) return
+
+    const newUseWeights = !targetList.useWeights
+
+    // When turning off weights, reset all items to weight 1
+    let updatedItems = targetList.items
+    if (!newUseWeights) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      updatedItems = targetList.items.map(({ weight, ...rest }) => rest)
+    }
+
+    if (user && !isGuest) {
+      const { error } = await supabase
+        .from('lists')
+        .update({
+          use_weights: newUseWeights,
+          items: updatedItems,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', listId)
+
+      if (error) {
+        console.error('Error toggling use weights:', error)
+        throw error
+      }
+    }
+
+    setLists((prev) =>
+      prev.map((list) =>
+        list.id === listId
+          ? { ...list, useWeights: newUseWeights, items: updatedItems, updatedAt: Date.now() }
+          : list
+      )
+    )
+  }
+
+  const resetWeights = async (listId: string) => {
+    const targetList = lists.find(list => list.id === listId)
+    if (!targetList) return
+
+    // Remove weight property from all items
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const updatedItems = targetList.items.map(({ weight, ...rest }) => rest)
+
+    if (user && !isGuest) {
+      const { error } = await supabase
+        .from('lists')
+        .update({
+          items: updatedItems,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', listId)
+
+      if (error) {
+        console.error('Error resetting weights:', error)
+        throw error
+      }
+    }
+
+    setLists((prev) =>
+      prev.map((list) =>
+        list.id === listId
+          ? { ...list, items: updatedItems, updatedAt: Date.now() }
+          : list
+      )
+    )
+  }
+
   const getRandomItem = (listId: string) => {
     const list = getList(listId)
     if (!list || list.items.length === 0) return null
+
+    // Use weighted selection if enabled
+    if (list.useWeights) {
+      const totalWeight = list.items.reduce((sum, item) => sum + (item.weight ?? 1), 0)
+      let random = Math.random() * totalWeight
+
+      for (const item of list.items) {
+        random -= item.weight ?? 1
+        if (random <= 0) {
+          return item
+        }
+      }
+      // Fallback to last item (shouldn't happen, but just in case)
+      return list.items[list.items.length - 1]
+    }
+
+    // Uniform distribution when weights disabled
     const randomIndex = Math.floor(Math.random() * list.items.length)
     return list.items[randomIndex]
   }
@@ -451,6 +584,9 @@ export const ListsProvider: React.FC<{
         archiveList,
         unarchiveList,
         getRandomItem,
+        updateItemWeight,
+        toggleUseWeights,
+        resetWeights,
       }}
     >
       {children}

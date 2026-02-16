@@ -7,6 +7,8 @@ import { ListItem } from '../../context/ListsContext'
 import {
   GripVerticalIcon,
   XIcon,
+  MinusIcon,
+  PlusIcon,
 } from 'lucide-react'
 
 interface SortableItemProps {
@@ -18,6 +20,9 @@ interface SortableItemProps {
   onCancelEdit: () => void
   onRemoveItem: (itemId: string) => void
   onEditingTextChange: (text: string) => void
+  showWeights?: boolean
+  onWeightChange?: (itemId: string, weight: number) => void
+  percentage?: number
 }
 
 const SortableItem: React.FC<SortableItemProps> = ({
@@ -29,6 +34,9 @@ const SortableItem: React.FC<SortableItemProps> = ({
   onCancelEdit,
   onRemoveItem,
   onEditingTextChange,
+  showWeights,
+  onWeightChange,
+  percentage,
 }) => {
   const {
     attributes,
@@ -97,6 +105,28 @@ const SortableItem: React.FC<SortableItemProps> = ({
           >
             {item.text}
           </span>
+          {showWeights && onWeightChange && (
+            <div className="mx-2 flex items-center space-x-1">
+              <button
+                onClick={() => onWeightChange(item.id, (item.weight ?? 1) - 1)}
+                disabled={(item.weight ?? 1) <= 1}
+                className="p-1 rounded text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 dark:text-gray-400 dark:hover:text-indigo-400 dark:hover:bg-gray-600 disabled:opacity-30 disabled:cursor-not-allowed"
+                title="Decrease weight"
+              >
+                <MinusIcon size={14} />
+              </button>
+              <span className="min-w-[3rem] text-center text-sm font-medium text-gray-600 dark:text-gray-300">
+                {percentage !== undefined ? `${percentage.toFixed(0)}%` : `${item.weight ?? 1}x`}
+              </span>
+              <button
+                onClick={() => onWeightChange(item.id, (item.weight ?? 1) + 1)}
+                className="p-1 rounded text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 dark:text-gray-400 dark:hover:text-indigo-400 dark:hover:bg-gray-600"
+                title="Increase weight"
+              >
+                <PlusIcon size={14} />
+              </button>
+            </div>
+          )}
           <div className="ml-2 flex space-x-1">
             <button
               onClick={() => onEditItem(item)}
@@ -126,6 +156,8 @@ interface ItemsListProps {
   onCancelEdit: () => void
   onRemoveItem: (itemId: string) => void
   onEditingTextChange: (text: string) => void
+  showWeights?: boolean
+  onWeightChange?: (itemId: string, weight: number) => void
 }
 
 const ItemsList: React.FC<ItemsListProps> = ({
@@ -137,22 +169,35 @@ const ItemsList: React.FC<ItemsListProps> = ({
   onCancelEdit,
   onRemoveItem,
   onEditingTextChange,
+  showWeights,
+  onWeightChange,
 }) => {
+  // Calculate total weight for percentage display
+  const totalWeight = items.reduce((sum, item) => sum + (item.weight ?? 1), 0)
+
   return (
     <ul className="space-y-2">
-      {items.map((item) => (
-        <SortableItem
-          key={item.id}
-          item={item}
-          isEditing={editingItemId === item.id}
-          editingText={editingItemText}
-          onEditItem={onEditItem}
-          onSaveEdit={onSaveEdit}
-          onCancelEdit={onCancelEdit}
-          onRemoveItem={onRemoveItem}
-          onEditingTextChange={onEditingTextChange}
-        />
-      ))}
+      {items.map((item) => {
+        const itemWeight = item.weight ?? 1
+        const percentage = totalWeight > 0 ? (itemWeight / totalWeight) * 100 : 0
+
+        return (
+          <SortableItem
+            key={item.id}
+            item={item}
+            isEditing={editingItemId === item.id}
+            editingText={editingItemText}
+            onEditItem={onEditItem}
+            onSaveEdit={onSaveEdit}
+            onCancelEdit={onCancelEdit}
+            onRemoveItem={onRemoveItem}
+            onEditingTextChange={onEditingTextChange}
+            showWeights={showWeights}
+            onWeightChange={onWeightChange}
+            percentage={percentage}
+          />
+        )
+      })}
     </ul>
   )
 }

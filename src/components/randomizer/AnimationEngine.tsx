@@ -8,6 +8,7 @@ interface AnimationEngineProps {
   items: ListItem[]
   onSelectionComplete?: (item: ListItem) => void
   disabled?: boolean
+  useWeights?: boolean
 }
 
 interface AnimationStage {
@@ -18,8 +19,22 @@ interface AnimationStage {
 const AnimationEngine: React.FC<AnimationEngineProps> = ({
   items,
   onSelectionComplete,
-  disabled = false
+  disabled = false,
+  useWeights = false
 }) => {
+  // Helper for weighted random selection
+  const getWeightedRandomItem = useCallback(() => {
+    if (!useWeights) {
+      return items[Math.floor(Math.random() * items.length)]
+    }
+    const totalWeight = items.reduce((sum, item) => sum + (item.weight ?? 1), 0)
+    let random = Math.random() * totalWeight
+    for (const item of items) {
+      random -= item.weight ?? 1
+      if (random <= 0) return item
+    }
+    return items[items.length - 1]
+  }, [items, useWeights])
   const [currentStage, setCurrentStage] = useState<AnimationStage>({ name: 'idle' })
   const [currentItem, setCurrentItem] = useState<ListItem | null>(null)
   const [selectedItem, setSelectedItem] = useState<ListItem | null>(null)
@@ -68,35 +83,45 @@ const AnimationEngine: React.FC<AnimationEngineProps> = ({
 
     const performShuffle = () => {
       const { shuffleCount, totalShuffles } = animationRef.current
-      
+
       if (shuffleCount >= totalShuffles) {
-        // Animation complete
-        const finalItem = items[Math.floor(Math.random() * items.length)]
+        // Animation complete - use weighted selection for final item
+        const finalItem = getWeightedRandomItem()
         setCurrentItem(finalItem)
         setSelectedItem(finalItem)
         setIsSpinning(false)
         setCurrentStage({ name: 'result' })
-        
+
         // Show result after brief pause
         setTimeout(() => {
           setShowResult(true)
           setCurrentStage({ name: 'celebration' })
           onSelectionComplete?.(finalItem)
         }, 500)
-        
+
         return
       }
 
-      // Select random item for this shuffle
-      const randomIndex = Math.floor(Math.random() * items.length)
-      const newCurrentItem = items[randomIndex]
+      // Select random item for this shuffle (weighted so heavier items appear more often)
+      const newCurrentItem = getWeightedRandomItem()
       setCurrentItem(newCurrentItem)
 
       // Calculate next shuffle timing (progressive slowdown)
       const progress = shuffleCount / totalShuffles
       const minDuration = 80
       const maxDuration = 400
-      const currentDuration = minDuration + (maxDuration - minDuration) * Math.pow(progress, 2)
+      let currentDuration = minDuration + (maxDuration - minDuration) * Math.pow(progress, 2)
+
+      // Add extra dwell time for weighted items during slowdown phase
+      if (useWeights && progress > 0.5) {
+        const itemWeight = newCurrentItem.weight ?? 1
+        const maxWeight = Math.max(...items.map(i => i.weight ?? 1))
+        if (itemWeight > 1 && maxWeight > 1) {
+          // Add up to 50% more time for highest weighted items
+          const weightBonus = ((itemWeight - 1) / (maxWeight - 1)) * 0.5
+          currentDuration *= (1 + weightBonus)
+        }
+      }
 
       // Update stage based on progress
       if (progress > 0.7) {
@@ -104,11 +129,11 @@ const AnimationEngine: React.FC<AnimationEngineProps> = ({
       }
 
       animationRef.current.shuffleCount++
-      animationRef.current.timeoutId = setTimeout(performShuffle, currentDuration) as any
+      animationRef.current.timeoutId = setTimeout(performShuffle, currentDuration) as NodeJS.Timeout as unknown as number
     }
 
     performShuffle()
-  }, [disabled, items, isSpinning, onSelectionComplete, resetAnimation])
+  }, [disabled, items, isSpinning, onSelectionComplete, resetAnimation, getWeightedRandomItem, useWeights])
 
   const containerVariants = {
     idle: {
@@ -155,6 +180,7 @@ const AnimationEngine: React.FC<AnimationEngineProps> = ({
                 items={items}
                 currentItem={currentItem}
                 isSpinning={isSpinning}
+                useWeights={useWeights}
               />
             </motion.div>
           ) : selectedItem ? (

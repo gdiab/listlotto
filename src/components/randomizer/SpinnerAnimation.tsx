@@ -7,14 +7,28 @@ interface SpinnerAnimationProps {
   currentItem: ListItem | null
   isSpinning: boolean
   onComplete?: () => void
+  useWeights?: boolean
 }
 
 const SpinnerAnimation: React.FC<SpinnerAnimationProps> = ({
-  items: _items,
+  items,
   currentItem,
   isSpinning,
-  onComplete: _onComplete
+  onComplete: _onComplete,
+  useWeights = false
 }) => {
+  // Calculate font scale based on weight (1x to 1.4x)
+  const getFontScale = () => {
+    if (!useWeights || !currentItem) return 1
+    const maxWeight = Math.max(...items.map(i => i.weight ?? 1))
+    if (maxWeight <= 1) return 1
+    const itemWeight = currentItem.weight ?? 1
+    // Scale from 1.0 (weight 1) to 1.4 (max weight)
+    return 1 + ((itemWeight - 1) / (maxWeight - 1)) * 0.4
+  }
+
+  const fontScale = getFontScale()
+  const isBoosted = useWeights && (currentItem?.weight ?? 1) > 1
   const spinnerVariants = {
     spinning: {
       rotate: [0, 360],
@@ -88,9 +102,25 @@ const SpinnerAnimation: React.FC<SpinnerAnimationProps> = ({
             exit="exit"
             className="text-center px-4"
           >
-            <div className="text-lg font-semibold text-gray-900 dark:text-white break-words">
+            <motion.div
+              className={`text-lg font-semibold break-words transition-all ${
+                isBoosted
+                  ? 'text-indigo-600 dark:text-indigo-400 font-bold'
+                  : 'text-gray-900 dark:text-white'
+              }`}
+              style={{
+                fontSize: `${fontScale}rem`,
+              }}
+              animate={{
+                scale: isBoosted ? [1, 1.02, 1] : 1,
+              }}
+              transition={{
+                duration: 0.3,
+                ease: 'easeInOut',
+              }}
+            >
               {currentItem.text}
-            </div>
+            </motion.div>
             {isSpinning && (
               <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 Shuffling...
