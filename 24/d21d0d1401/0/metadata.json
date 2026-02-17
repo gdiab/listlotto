@@ -1,0 +1,32 @@
+{
+  "cli_version": "0.4.4",
+  "checkpoint_id": "24d21d0d1401",
+  "session_id": "4dd4fe47-b6ed-4f11-b2be-50847e24cb4f",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-17T05:23:42.411156Z",
+  "branch": "main",
+  "checkpoints_count": 2,
+  "files_touched": [
+    "database/schema.sql",
+    "src/main.tsx"
+  ],
+  "agent": "Claude Code",
+  "transcript_identifier_at_start": "b2306129-0c8c-4e45-86cf-8b925973366f",
+  "token_usage": {
+    "input_tokens": 96,
+    "cache_creation_tokens": 46769,
+    "cache_read_tokens": 423881,
+    "output_tokens": 31,
+    "api_call_count": 11
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-17T05:23:42.350614Z",
+    "agent_lines": 7,
+    "human_added": 2,
+    "human_modified": 2,
+    "human_removed": 0,
+    "total_committed": 11,
+    "agent_percentage": 63.63636363636363
+  },
+  "transcript_path": ".claude/projects/-Users-gd-github-listlotto/4dd4fe47-b6ed-4f11-b2be-50847e24cb4f.jsonl"
+}

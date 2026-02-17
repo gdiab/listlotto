@@ -1,0 +1,85 @@
+Summary of the Issue
+Title: Function Search Path Mutable
+Entity: public.handle_new_user
+Schema: public
+Problem: The function public.handle_new_user does not set a fixed search_path. This means it inherits whatever search_path is active for the executing role/session.
+Risk: A mutable search_path can cause:
+Function behavior to change depending on who calls it or which extensions/schemas are first in path.
+Accidental or malicious shadowing of objects (e.g., tables, functions) with the same name in different schemas.
+Security issues, especially for SECURITY DEFINER functions, where an attacker could manipulate resolution of unqualified identifiers.
+Recommended Fixes
+Set an explicit, minimal search_path in the function definition
+
+Recreate/replace the function with a safe search_path, typically:
+search_path = pg_catalog, public for most cases.
+If the function references only fully-qualified objects, you can use search_path = pg_catalog to be stricter.
+Example pattern (adjust language, body, and volatility to match your function):
+SQL Query
+
+
+
+CREATE OR REPLACE FUNCTION public.handle_new_user(...)
+RETURNS ...
+SET search_path = pg_catalog, public
+LANGUAGE plpgsql
+-- [SECURITY DEFINER | SECURITY INVOKER]  (use DEFINER only if necessary)
+AS $
+BEGIN
+  -- function body (prefer schema-qualified names, e.g., public.my_table)
+END;
+$;
+
+Schema-qualify all object references inside the function
+
+Even with a fixed search_path, it’s best practice to use fully-qualified names:
+Tables: public.my_table
+Functions: public.my_helper(...)
+Types: public.my_type
+This removes ambiguity and hardens against future schema changes.
+Audit SECURITY DEFINER usage
+
+If the function is SECURITY DEFINER, a fixed search_path is critical.
+Also:
+Set LEAKPROOF only when safe (rare).
+Ensure the function owner has minimal necessary privileges.
+Revoke EXECUTE from PUBLIC if not intended for all:
+SQL Query
+
+
+
+REVOKE EXECUTE ON FUNCTION public.handle_new_user(...) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.handle_new_user(...) TO authenticated; -- example
+
+Optional: Lock down at session level for callers that rely on it
+
+If callers might alter search_path, ensure your function’s definition-level SET search_path supersedes that. Definition-level settings apply at function start and revert on exit.
+Validation Steps
+After updating:
+Re-run your advisor/lint tool to confirm the warning is cleared.
+Execute tests for public.handle_new_user under roles with different search_path to ensure consistent behavior.
+Review logs for any schema-resolution errors.
+Notes
+If public.handle_new_user references extensions (e.g., uuid-ossp, pgcrypto) or other schemas, include them explicitly in search_path or fully-qualify those references.
+
+
+
+
+a security issue supabase is telling me about
+
+Issue
+Function public.handle_new_user has a role mutable search_path
+
+Description
+Detects functions where the search_path parameter is not set.
+
+---
+
+any possible issues after I run this?
+
+---
+
+yes that worked well. ty
+
+---
+
+I want to set up analytics.
