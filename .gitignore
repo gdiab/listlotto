@@ -45,3 +45,5 @@ coverage
 .idea/
 # CLI agent artifacts
 .code/
+.claude/
+.entire/
