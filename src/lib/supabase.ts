@@ -19,6 +19,7 @@ export interface Database {
           email: string
           name: string | null
           avatar_url: string | null
+          preferences: Record<string, unknown>
           created_at: string
           updated_at: string
         }
@@ -27,6 +28,7 @@ export interface Database {
           email: string
           name?: string | null
           avatar_url?: string | null
+          preferences?: Record<string, unknown>
           created_at?: string
           updated_at?: string
         }
@@ -35,6 +37,7 @@ export interface Database {
           email?: string
           name?: string | null
           avatar_url?: string | null
+          preferences?: Record<string, unknown>
           updated_at?: string
         }
       }
@@ -45,6 +48,8 @@ export interface Database {
           title: string
           items: { id: string; text: string; createdAt: number }[]
           is_archived: boolean
+          archived_at: string | null
+          sort_order: number | null
           created_at: string
           updated_at: string
         }
@@ -54,6 +59,8 @@ export interface Database {
           title: string
           items?: { id: string; text: string; createdAt: number }[]
           is_archived?: boolean
+          archived_at?: string | null
+          sort_order?: number | null
           created_at?: string
           updated_at?: string
         }
@@ -63,6 +70,8 @@ export interface Database {
           title?: string
           items?: { id: string; text: string; createdAt: number }[]
           is_archived?: boolean
+          archived_at?: string | null
+          sort_order?: number | null
           updated_at?: string
         }
       }

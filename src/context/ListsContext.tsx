@@ -17,6 +17,8 @@ export interface List {
   updatedAt: number
   isArchived: boolean
   useWeights?: boolean // When true, item weights affect randomization
+  archivedAt?: number | null
+  sortOrder?: number | null
 }
 
 interface ListsContextType {
@@ -33,6 +35,7 @@ interface ListsContextType {
   archiveList: (id: string) => Promise<void>
   unarchiveList: (id: string) => Promise<void>
   getRandomItem: (listId: string) => ListItem | null
+  reorderLists: (orderedActiveListIds: string[]) => Promise<void>
   // Weight management
   updateItemWeight: (listId: string, itemId: string, weight: number) => Promise<void>
   toggleUseWeights: (listId: string) => Promise<void>
@@ -75,7 +78,9 @@ export const ListsProvider: React.FC<{
               createdAt: new Date(row.created_at).getTime(),
               updatedAt: new Date(row.updated_at).getTime(),
               isArchived: row.is_archived,
-              useWeights: row.use_weights ?? false
+              useWeights: row.use_weights ?? false,
+              archivedAt: row.archived_at ? new Date(row.archived_at).getTime() : null,
+              sortOrder: row.sort_order ?? null
             }))
             setLists(convertedLists)
           }
@@ -140,6 +145,13 @@ export const ListsProvider: React.FC<{
   }
 
   const createList = async (title: string): Promise<List> => {
+    // New lists go to top of custom order
+    const activeLists = lists.filter(l => !l.isArchived)
+    const minOrder = activeLists.reduce(
+      (min, l) => (l.sortOrder != null && l.sortOrder < min ? l.sortOrder : min),
+      0
+    )
+
     const newList: List = {
       id: `list_${Date.now()}`,
       title,
@@ -148,6 +160,8 @@ export const ListsProvider: React.FC<{
       updatedAt: Date.now(),
       isArchived: false,
       useWeights: false,
+      archivedAt: null,
+      sortOrder: minOrder - 1,
     }
 
     if (user && !isGuest) {
@@ -179,7 +193,9 @@ export const ListsProvider: React.FC<{
           title,
           items: [],
           is_archived: false,
-          use_weights: false
+          use_weights: false,
+          archived_at: null,
+          sort_order: minOrder - 1
         })
         .select()
         .single()
@@ -197,7 +213,9 @@ export const ListsProvider: React.FC<{
           createdAt: new Date(data.created_at).getTime(),
           updatedAt: new Date(data.updated_at).getTime(),
           isArchived: data.is_archived,
-          useWeights: data.use_weights ?? false
+          useWeights: data.use_weights ?? false,
+          archivedAt: data.archived_at ? new Date(data.archived_at).getTime() : null,
+          sortOrder: data.sort_order ?? null
         }
         setLists((prev) => [createdList, ...prev])
         return createdList
@@ -221,6 +239,12 @@ export const ListsProvider: React.FC<{
       if (updates.items !== undefined) supabaseUpdates.items = updates.items
       if (updates.isArchived !== undefined) supabaseUpdates.is_archived = updates.isArchived
       if (updates.useWeights !== undefined) supabaseUpdates.use_weights = updates.useWeights
+      if ('archivedAt' in updates) {
+        supabaseUpdates.archived_at = updates.archivedAt
+          ? new Date(updates.archivedAt).toISOString()
+          : null
+      }
+      if ('sortOrder' in updates) supabaseUpdates.sort_order = updates.sortOrder
 
       const { error } = await supabase
         .from('lists')
@@ -430,13 +454,58 @@ export const ListsProvider: React.FC<{
   const archiveList = async (id: string) => {
     await updateList(id, {
       isArchived: true,
+      archivedAt: Date.now(),
+      sortOrder: null,
     })
   }
 
   const unarchiveList = async (id: string) => {
+    // Place unarchived list at top of custom order
+    const activeLists = lists.filter(l => !l.isArchived && l.id !== id)
+    const minOrder = activeLists.reduce(
+      (min, l) => (l.sortOrder != null && l.sortOrder < min ? l.sortOrder : min),
+      0
+    )
     await updateList(id, {
       isArchived: false,
+      archivedAt: null,
+      sortOrder: minOrder - 1,
     })
+  }
+
+  const reorderLists = async (orderedActiveListIds: string[]) => {
+    // Optimistic local update: assign sortOrder based on position
+    const orderMap = new Map(orderedActiveListIds.map((id, i) => [id, i]))
+
+    setLists((prev) =>
+      prev.map((list) => {
+        const newOrder = orderMap.get(list.id)
+        if (newOrder !== undefined) {
+          return { ...list, sortOrder: newOrder }
+        }
+        return list
+      })
+    )
+
+    if (user && !isGuest) {
+      // Batch update sort_order for all active lists
+      const updates = orderedActiveListIds.map((id, index) => ({
+        id,
+        sort_order: index,
+        updated_at: new Date().toISOString(),
+      }))
+
+      for (const update of updates) {
+        const { error } = await supabase
+          .from('lists')
+          .update({ sort_order: update.sort_order })
+          .eq('id', update.id)
+
+        if (error) {
+          console.error('Error reordering list:', error)
+        }
+      }
+    }
   }
 
   const updateItemWeight = async (listId: string, itemId: string, weight: number) => {
@@ -584,6 +653,7 @@ export const ListsProvider: React.FC<{
         archiveList,
         unarchiveList,
         getRandomItem,
+        reorderLists,
         updateItemWeight,
         toggleUseWeights,
         resetWeights,

@@ -23,6 +23,19 @@ export interface List {
   updatedAt: number
   isArchived: boolean
   useWeights?: boolean // When true, item weights affect randomization
+  archivedAt?: number | null
+  sortOrder?: number | null
+}
+
+// Dashboard preference types
+export type ViewMode = 'card' | 'list'
+export type ActiveSortMode = 'updated' | 'alpha' | 'custom'
+export type ArchivedSortMode = 'archived_recent' | 'updated' | 'alpha'
+
+export interface DashboardPreferences {
+  viewMode: ViewMode
+  activeSortMode: ActiveSortMode
+  archivedSortMode: ArchivedSortMode
 }
 
 // Context types
@@ -53,6 +66,7 @@ export interface ListsContextType {
   archiveList: (id: string) => void
   unarchiveList: (id: string) => void
   getRandomItem: (listId: string) => ListItem | null
+  reorderLists: (orderedActiveListIds: string[]) => Promise<void>
   // Weight management
   updateItemWeight: (listId: string, itemId: string, weight: number) => void
   toggleUseWeights: (listId: string) => void

@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS public.users (
   email VARCHAR(255) NOT NULL UNIQUE,
   name VARCHAR(255),
   avatar_url TEXT,
+  preferences JSONB NOT NULL DEFAULT '{}'::jsonb,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
@@ -22,6 +23,8 @@ CREATE TABLE IF NOT EXISTS public.lists (
   title VARCHAR(255) NOT NULL,
   items JSONB NOT NULL DEFAULT '[]'::jsonb,
   is_archived BOOLEAN DEFAULT FALSE,
+  archived_at TIMESTAMP WITH TIME ZONE NULL,
+  sort_order INTEGER NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
@@ -30,6 +33,8 @@ CREATE TABLE IF NOT EXISTS public.lists (
 CREATE INDEX IF NOT EXISTS lists_user_id_idx ON public.lists(user_id);
 CREATE INDEX IF NOT EXISTS lists_created_at_idx ON public.lists(created_at);
 CREATE INDEX IF NOT EXISTS lists_updated_at_idx ON public.lists(updated_at);
+CREATE INDEX IF NOT EXISTS lists_user_archived_at_idx ON public.lists(user_id, is_archived, archived_at DESC);
+CREATE INDEX IF NOT EXISTS lists_user_sort_order_idx ON public.lists(user_id, is_archived, sort_order ASC);
 
 -- Enable Row Level Security
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
