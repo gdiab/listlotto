@@ -38,7 +38,7 @@ import {
   ChevronDownIcon,
   LayoutGridIcon,
   ListIcon,
-  ArrowUpDownIcon,
+  GripHorizontalIcon,
 } from 'lucide-react'
 
 import type {
@@ -84,8 +84,6 @@ function SortableCardWrapper({
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
-    position: 'relative' as const,
-    zIndex: isDragging ? 10 : 'auto' as const,
   }
 
   return (
@@ -93,10 +91,10 @@ function SortableCardWrapper({
       {showReorderControls && (
         <div
           {...listeners}
-          className="absolute top-2 left-2 z-10 cursor-grab bg-white/80 dark:bg-gray-700/80 rounded p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 touch-none"
+          className="flex items-center justify-center py-1.5 cursor-grab bg-gray-100 dark:bg-gray-700 rounded-t-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 touch-none transition-colors"
           aria-label="Drag to reorder"
         >
-          <ArrowUpDownIcon size={14} />
+          <GripHorizontalIcon size={16} />
         </div>
       )}
       <ListCard
@@ -444,81 +442,60 @@ export const Dashboard: React.FC = () => {
     const listIds = filteredLists.map((l) => l.id)
 
     if (prefs.viewMode === 'list') {
-      // List view
-      const rows = filteredLists.map((list, idx) => (
-        <SortableRowWrapper
-          key={list.id}
-          list={list}
-          onArchive={archiveList}
-          onUnarchive={unarchiveList}
-          onDelete={deleteList}
-          showReorderControls={canReorder}
-          isFirst={idx === 0}
-          isLast={idx === filteredLists.length - 1}
-          onMoveUp={handleMoveUp}
-          onMoveDown={handleMoveDown}
-        />
-      ))
-
-      if (canReorder) {
-        return (
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            modifiers={[restrictToParentElement]}
-            onDragEnd={handleDragEnd}
-          >
-            <SortableContext
-              items={listIds}
-              strategy={verticalListSortingStrategy}
-            >
-              <div className="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-                {rows}
-              </div>
-            </SortableContext>
-          </DndContext>
-        )
-      }
-
-      return (
-        <div className="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-          {rows}
-        </div>
-      )
-    }
-
-    // Card view
-    const cards = filteredLists.map((list) => (
-      <SortableCardWrapper
-        key={list.id}
-        list={list}
-        onArchive={archiveList}
-        onUnarchive={unarchiveList}
-        onDelete={deleteList}
-        showReorderControls={canReorder}
-      />
-    ))
-
-    if (canReorder) {
       return (
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
+          modifiers={[restrictToParentElement]}
           onDragEnd={handleDragEnd}
         >
-          <SortableContext items={listIds} strategy={rectSortingStrategy}>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {cards}
+          <SortableContext
+            items={listIds}
+            strategy={verticalListSortingStrategy}
+          >
+            <div className="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+              {filteredLists.map((list, idx) => (
+                <SortableRowWrapper
+                  key={list.id}
+                  list={list}
+                  onArchive={archiveList}
+                  onUnarchive={unarchiveList}
+                  onDelete={deleteList}
+                  showReorderControls={canReorder}
+                  isFirst={idx === 0}
+                  isLast={idx === filteredLists.length - 1}
+                  onMoveUp={handleMoveUp}
+                  onMoveDown={handleMoveDown}
+                />
+              ))}
             </div>
           </SortableContext>
         </DndContext>
       )
     }
 
+    // Card view
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {cards}
-      </div>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
+        <SortableContext items={listIds} strategy={rectSortingStrategy}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredLists.map((list) => (
+              <SortableCardWrapper
+                key={list.id}
+                list={list}
+                onArchive={archiveList}
+                onUnarchive={unarchiveList}
+                onDelete={deleteList}
+                showReorderControls={canReorder}
+              />
+            ))}
+          </div>
+        </SortableContext>
+      </DndContext>
     )
   }
 
@@ -644,7 +621,7 @@ export const Dashboard: React.FC = () => {
                 setActiveSortMode(e.target.value as ActiveSortMode)
               }
             }}
-            className="border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-sm text-gray-700 dark:text-gray-200 px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+            className="appearance-none border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-sm text-gray-700 dark:text-gray-200 pl-3 pr-8 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%239ca3af%22%20stroke-width%3D%222%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-[right_8px_center] bg-no-repeat"
             aria-label="Sort order"
           >
             {(showArchived ? archivedSortOptions : activeSortOptions).map(
