@@ -1,0 +1,31 @@
+{
+  "cli_version": "0.4.9",
+  "checkpoint_id": "2df43817c1d5",
+  "session_id": "2166e04d-e1e0-4304-b006-1aa9db100d3a",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-06T01:39:20.362111Z",
+  "branch": "feat/wheel-randomizer",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "src/components/randomizer/AnimationEngine.tsx",
+    "src/components/randomizer/SpinnerAnimation.tsx"
+  ],
+  "agent": "Claude Code",
+  "turn_id": "71e402b616a0",
+  "token_usage": {
+    "input_tokens": 34,
+    "cache_creation_tokens": 40366,
+    "cache_read_tokens": 870050,
+    "output_tokens": 13712,
+    "api_call_count": 26
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-06T01:39:20.259118Z",
+    "agent_lines": 243,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 243,
+    "agent_percentage": 100
+  }
+}

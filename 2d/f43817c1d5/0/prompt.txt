@@ -1,0 +1,62 @@
+Implement the following plan:
+
+# Redesign Randomizer: Wheel/Carousel Style
+
+## Context
+The current result screen is too cheesy — emoji-heavy "Winner!" badge, floating particles, shimmer effects, and "There's your answer!" text. The user wants a Price is Right-style wheel/carousel that keeps the theatrical energy but feels more polished.
+
+## Approach
+
+### 1. Replace `SpinnerAnimation.tsx` — Wheel Carousel
+Replace the current spinning circle (which just shows one item at a time inside a ring) with a **vertical carousel/wheel** showing multiple items:
+
+- Display a fixed-height viewport showing ~5 visible items in a vertical list
+- Center row is highlighted (the "pointer" position) with a distinct background/border
+- Items above and below the center are progressively dimmed and slightly scaled down
+- On spin: items scroll upward through the viewport with CSS transform/translate, decelerating naturally
+- Uses `framer-motion` `animate` with spring physics for the deceleration
+- A pointer indicator (arrow or line) marks the center selection zone
+- Weighted items can appear larger or with subtle emphasis during the scroll
+
+### 2. Replace `ResultDisplay.tsx` — Clean Result
+Strip the cheesiness from the result display:
+
+- Remove: emoji "Winner!" badge, floating particles, shimmer effect, "There's your answer!" text
+- Keep: confetti (toned down — single burst, fewer particles)
+- The wheel stays visible after selection — the winning item remains highlighted in the center with neighbors still visible but dimmed
+- Add a subtle glow/pulse on the selected center item
+- Show "Your pick" as a small label above the selected item
+
+### 3. Update `AnimationEngine.tsx` — Unified Flow
+- Instead of swapping between SpinnerAnimation and ResultDisplay (`AnimatePresence mode="wait"`), the wheel component handles both states
+- The wheel spins and settles — no separate "result" component swap needed
+- The confetti fires when the wheel stops
+- Button text: "Choose For Me" → "Spin Again" after result
+
+## Files to Modify
+- `src/components/randomizer/SpinnerAnimation.tsx` — full rewrite as wheel carousel
+- `src/components/randomizer/ResultDisplay.tsx` — simplify dramatically or remove (fold into wheel)
+- `src/components/randomizer/AnimationEngine.tsx` — update to use unified wheel component
+
+## Verification
+- `npm run typecheck` passes
+- `npm run build` passes
+- Manual test: spin with various list sizes (2 items, 5 items, 20+ items)
+- Dark mode and light mode both look correct
+- Weighted items still work correctly
+- Confetti still fires but is toned down
+
+
+If you need specific details from before exiting plan mode (like exact code snippets, error messages, or content you generated), read the full transcript at: /Users/gd/.claude/projects/-Users-gd-github-listlotto/e7b8553d-1ec9-4d71-a871-d597708df375.jsonl
+
+---
+
+Tool loaded.
+
+---
+
+Tool loaded.
+
+---
+
+commit and I will review
