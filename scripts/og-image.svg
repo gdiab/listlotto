@@ -31,6 +31,12 @@
     <circle cx="110" cy="110" r="12.5" fill="white"/>
   </g>
 
+  <!-- CTA pill -->
+  <g transform="translate(720,186)">
+    <rect width="400" height="88" rx="44" fill="url(#logo)"/>
+    <text x="200" y="58" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="34" font-weight="600" fill="white">Make a list &#8594; Spin</text>
+  </g>
+
   <!-- Wordmark + tagline -->
   <text x="140" y="400" font-family="Helvetica, Arial, sans-serif" font-size="104" font-weight="700" fill="url(#title)">ListLotto</text>
   <text x="142" y="470" font-family="Helvetica, Arial, sans-serif" font-size="40" font-weight="400" fill="#cbd5e1">Random list picker &amp; decision randomizer</text>
