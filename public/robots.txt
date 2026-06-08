@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /settings
+Disallow: /list/
+Disallow: /randomize/
+
+Sitemap: https://listlotto.com/sitemap.xml

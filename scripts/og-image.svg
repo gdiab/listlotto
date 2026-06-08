@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0b1120"/>
+      <stop offset="100%" stop-color="#111827"/>
+    </linearGradient>
+    <linearGradient id="logo" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#8b5cf6"/>
+    </linearGradient>
+    <linearGradient id="title" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#a5b4fc"/>
+      <stop offset="100%" stop-color="#c4b5fd"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- Soft accent glow -->
+  <circle cx="980" cy="120" r="260" fill="#6366f1" opacity="0.12"/>
+  <circle cx="180" cy="560" r="220" fill="#8b5cf6" opacity="0.10"/>
+
+  <!-- Dice logo (scaled from favicon, 5x = 160px) -->
+  <g transform="translate(140,150)">
+    <rect width="160" height="160" rx="30" fill="url(#logo)"/>
+    <circle cx="50"  cy="50"  r="12.5" fill="white"/>
+    <circle cx="110" cy="50"  r="12.5" fill="white"/>
+    <circle cx="80"  cy="80"  r="12.5" fill="white"/>
+    <circle cx="50"  cy="110" r="12.5" fill="white"/>
+    <circle cx="110" cy="110" r="12.5" fill="white"/>
+  </g>
+
+  <!-- Wordmark + tagline -->
+  <text x="140" y="400" font-family="Helvetica, Arial, sans-serif" font-size="104" font-weight="700" fill="url(#title)">ListLotto</text>
+  <text x="142" y="470" font-family="Helvetica, Arial, sans-serif" font-size="40" font-weight="400" fill="#cbd5e1">Random list picker &amp; decision randomizer</text>
+  <text x="142" y="530" font-family="Helvetica, Arial, sans-serif" font-size="32" font-weight="400" fill="#94a3b8">Make any choice a show — animations, confetti, done.</text>
+</svg>
