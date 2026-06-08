@@ -1,0 +1,25 @@
+is there anything we can improve with seo?
+
+---
+
+generate it
+
+---
+
+commit and push
+
+---
+
+card look sgreat on opengraph. Except I'd like to change that last sentance of the image.
+
+---
+
+Free, fun, and gloriously indecisive-friendly. <--- pretty good!
+
+---
+
+No CTA found in the image. Adding one can significantly boost click-through rate. <--- does this make sense for us? that's what opengraph called out for meta-tag inspection
+
+---
+
+Make a list → Spin
