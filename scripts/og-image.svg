@@ -34,5 +34,5 @@
   <!-- Wordmark + tagline -->
   <text x="140" y="400" font-family="Helvetica, Arial, sans-serif" font-size="104" font-weight="700" fill="url(#title)">ListLotto</text>
   <text x="142" y="470" font-family="Helvetica, Arial, sans-serif" font-size="40" font-weight="400" fill="#cbd5e1">Random list picker &amp; decision randomizer</text>
-  <text x="142" y="530" font-family="Helvetica, Arial, sans-serif" font-size="32" font-weight="400" fill="#94a3b8">Make any choice a show — animations, confetti, done.</text>
+  <text x="142" y="530" font-family="Helvetica, Arial, sans-serif" font-size="32" font-weight="400" fill="#94a3b8">Free, fun, and gloriously indecisive-friendly.</text>
 </svg>
